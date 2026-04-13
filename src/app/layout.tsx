@@ -11,6 +11,10 @@ import "./globals.css";
 // ··· Importamos los componentes de layout. ··· //
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
+// ··· Importamos los componentes de layout. ··· //
+import { BackToTopButton } from "@/components/layout/back-to-top-button";
+import { ScrollToTopOnRoute } from "@/components/layout/scroll-to-top-on-route";
+
 
 // ··· Definimos las fuentes. ··· //
 const geistSans = Geist({
@@ -40,11 +44,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}
       >
+        <ScrollToTopOnRoute />
         <div className="flex min-h-screen flex-col">
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />
         </div>
+        <BackToTopButton />
       </body>
     </html>
   );
