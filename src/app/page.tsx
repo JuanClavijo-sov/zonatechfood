@@ -4,13 +4,8 @@
 
 // ··· Se implemento un estilo basico para la pagina principal ··· //
 
+import { Hero } from "@/components/home/hero";
+
 export default function HomePage() {
-  return (
-    <section className="container mx-auto px-4 py-10">
-      <h1 className="text-4xl font-bold">ZonaTechFood</h1>
-      <p className="mt-4 text-muted-foreground">
-        Descubre restaurantes, guarda favoritos y explora los mejores lugares de comida.
-      </p>
-    </section>
-  );
+  return <Hero />;
 }

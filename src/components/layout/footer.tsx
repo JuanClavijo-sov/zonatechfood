@@ -7,9 +7,9 @@
 // ··· Componente de Pie de Pagina ··· //
 export function Footer() {
     return (
-        <footer className="border-t">
+        <footer className="border-t border-white/10">
             <div className="container mx-auto px-4 py-6">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-white/60">
                     © 2026 ZonaTechFood. Todos los derechos reservados.
                 </p>
             </div>
