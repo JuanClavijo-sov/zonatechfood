@@ -10,6 +10,8 @@ import { MapPin, Star } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { getRestaurantBySlug } from "@/lib/supabase/restaurants";
+// ··· Botón reutilizable para guardar o quitar favoritos desde la ficha. ··· //
+import { FavoriteButton } from "@/components/restaurants/favorite-button";
 
 /** Params asíncronos (App Router); el segmento dinámico es el slug del restaurante. */
 type RestaurantDetailPageProps = {
@@ -161,11 +163,11 @@ export default async function RestaurantDetailPage({
               </div>
 
               {/* CTAs: favoritos (pendiente de lógica) y contacto */}
-              <div className="mt-8 flex flex-wrap gap-4">
-                <Button className="min-h-12 rounded-xl bg-[#FF5B04] px-7 text-base text-white transition-all duration-300 hover:scale-[1.02] hover:bg-[#e65000] hover:shadow-[0_0_22px_rgba(255,91,4,0.24)]">
-                  Guardar en favoritos
-                </Button>
+              <div className="mt-8 flex flex-wrap items-center gap-4">
+                {/* Botón de favoritos: persiste estado por usuario autenticado */}
+                <FavoriteButton restaurantId={restaurant.id} />
 
+                {/* Botón de contacto hacia la ruta de soporte */}
                 <Button
                   asChild
                   variant="outline"
