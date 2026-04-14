@@ -1,24 +1,91 @@
-// ············································· //
+// ·················································· //
 // ··· PAGE.TSX: Pagina de registro de usuario ··· //
-// ············································· //
+// ·················································· //
 
-// ··· Pagina de registro de nuevos usuarios.      ··· //
-// ··· TODO: Conectar envío con API de alta, validación y políticas de contraseña. ··· //
-// ··· Misma envoltura visual que login (AuthShell) para coherencia entre flujos.   ··· //
+// ··· Pagina de registro de nuevos usuarios. ··· //
+// ··· Conectada con Supabase Auth (signUp) y metadata full_name en user_metadata. ··· //
+// ··· Misma envoltura visual que login (AuthShell) para coherencia entre flujos. ··· //
 
 "use client";
 
 import { motion } from "motion/react";
+import { useState } from "react";
 
 import { AuthShell } from "@/components/forms/auth-shell";
+import { PasswordInput } from "@/components/forms/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/forms/password-input";
+import { supabase } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
+  // ··· Estados locales: carga, validación y mensajes tras signUp. ··· //
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    // ··· Reiniciar avisos y marcar envio en curso. ··· //
+    setErrorMessage("");
+    setSuccessMessage("");
+    setLoading(true);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+    const confirmPassword = String(formData.get("confirmPassword") ?? "");
+
+    // ··· Comprobar que todos los campos llegaron desde el formulario. ··· //
+    if (!name || !email || !password || !confirmPassword) {
+      setErrorMessage("Todos los campos son obligatorios.");
+      setLoading(false);
+      return;
+    }
+
+    // ··· Evitar registros con contrasenas distintas antes de llamar a Supabase. ··· //
+    if (password !== confirmPassword) {
+      setErrorMessage("Las contraseñas no coinciden.");
+      setLoading(false);
+      return;
+    }
+
+    // ··· Política mínima de longitud alineada con lo habitual en Auth. ··· //
+    if (password.length < 6) {
+      setErrorMessage("La contraseña debe tener al menos 6 caracteres.");
+      setLoading(false);
+      return;
+    }
+
+    // ··· Alta en Supabase; full_name queda en user_metadata para perfil futuro. ··· //
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name,
+        },
+      },
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+      return;
+    }
+
+    // ··· Exito: limpiar campos y mostrar instrucciones (confirmacion por email si aplica). ··· //
+    setSuccessMessage("Cuenta creada correctamente. Ya puedes iniciar sesión.");
+    form.reset();
+    setLoading(false);
+  };
+
   return (
-    /* Registro: datos basicos + confirmacion de contrasena; pie con enlace a login */
+    /* Registro: datos básicos + confirmación de contraseña; pie con enlace a login */
     <AuthShell
       badge="Registro"
       title="Crea tu cuenta y empieza a vivir una experiencia gastronómica más personalizada"
@@ -34,7 +101,7 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <form className="mt-8 space-y-5">
+      <form onSubmit={handleRegister} className="mt-8 space-y-5">
         {/* Nombre visible en la cuenta; animación escalonada con el resto de bloques. */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -47,13 +114,15 @@ export default function RegisterPage() {
           </Label>
           <Input
             id="name"
+            name="name"
             type="text"
             placeholder="Tu nombre"
+            disabled={loading}
             className="h-12 rounded-xl border-white/15 bg-white/6 text-white placeholder:text-white/35"
           />
         </motion.div>
 
-        {/* Correo como identificador principal para acceso posterior */}
+        {/* Correo como identificador principal para acceso posterior. */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -65,13 +134,15 @@ export default function RegisterPage() {
           </Label>
           <Input
             id="email"
+            name="email"
             type="email"
             placeholder="correo@ejemplo.com"
+            disabled={loading}
             className="h-12 rounded-xl border-white/15 bg-white/6 text-white placeholder:text-white/35"
           />
         </motion.div>
 
-        {/* Contraseña inicial; la coincidencia con confirmación se validará en el backend o en cliente. */}
+        {/* Contraseña inicial; la coincidencia con confirmación se validará antes del envío. */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -83,7 +154,9 @@ export default function RegisterPage() {
           </Label>
           <PasswordInput
             id="password"
+            name="password"
             placeholder="••••••••"
+            disabled={loading}
             className="h-12 rounded-xl border-white/15 bg-white/6 text-white placeholder:text-white/35"
           />
         </motion.div>
@@ -100,12 +173,29 @@ export default function RegisterPage() {
           </Label>
           <PasswordInput
             id="confirmPassword"
+            name="confirmPassword"
             placeholder="••••••••"
+            disabled={loading}
             className="h-12 rounded-xl border-white/15 bg-white/6 text-white placeholder:text-white/35"
           />
         </motion.div>
 
-        {/* Envío del alta; falta onSubmit y estados de carga / error. */}
+        {/* Banner de feedback: error de validación o Supabase, o mensaje de cuenta creada. */}
+        {(errorMessage || successMessage) && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`rounded-xl border px-4 py-3 text-sm ${
+              errorMessage
+                ? "border-red-400/20 bg-red-500/10 text-red-200"
+                : "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
+            }`}
+          >
+            {errorMessage || successMessage}
+          </motion.div>
+        )}
+
+        {/* Envío del alta: boton deshabilitado mientras Supabase procesa signUp. */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -114,9 +204,12 @@ export default function RegisterPage() {
         >
           <Button
             type="submit"
-            className="group relative min-h-12 w-full overflow-hidden rounded-xl bg-[#FF5B04] text-base text-white transition-all duration-300 hover:scale-[1.01] hover:bg-[#e65000] hover:shadow-[0_0_22px_rgba(255,91,4,0.24)]"
+            disabled={loading}
+            className="group relative min-h-12 w-full overflow-hidden rounded-xl bg-[#FF5B04] text-base text-white transition-all duration-300 hover:scale-[1.01] hover:bg-[#e65000] hover:shadow-[0_0_22px_rgba(255,91,4,0.24)] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            <span className="relative z-10">Crear cuenta</span>
+            <span className="relative z-10">
+              {loading ? "Creando cuenta..." : "Crear cuenta"}
+            </span>
             <span className="absolute inset-0 z-0 bg-[linear-gradient(120deg,transparent_20%,rgba(255,255,255,0.22)_50%,transparent_80%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           </Button>
         </motion.div>

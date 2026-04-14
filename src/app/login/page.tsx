@@ -1,23 +1,68 @@
-// ············································· //
-// ··· PAGE.TSX: Pagina de inicio de sesion   ··· //
-// ············································· //
+// ·················································· //
+// ··· PAGE.TSX: Pagina de inicio de sesion ··· //
+// ·················································· //
 
 // ··· Pagina de inicio de sesion del usuario. ··· //
-// ··· TODO: Conectar envío del formulario con autenticación real (API, sesión, validación). ··· //
-// ··· Presentación: AuthShell (columna informativa + tarjeta) y campos con animación suave. ··· //
+// ··· Conectada con Supabase Auth (signInWithPassword) con email y contraseña. ··· //
+// ··· Presentación: AuthShell (columna informativa + tarjeta) y animaciones suaves. ··· //
 
 "use client";
 
 import Link from "next/link";
 import { motion } from "motion/react";
+import { useState } from "react";
 
 import { AuthShell } from "@/components/forms/auth-shell";
+import { PasswordInput } from "@/components/forms/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/forms/password-input";
+import { supabase } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  // ··· Estados locales: bloqueo del formulario, error de Supabase y mensaje de éxito. ··· //
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    // ··· Limpiar avisos previos y activar carga antes de leer el formulario. ··· //
+    setErrorMessage("");
+    setSuccessMessage("");
+    setLoading(true);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const email = String(formData.get("email") ?? "").trim();
+    const password = String(formData.get("password") ?? "");
+
+    // ··· Validación mínima en cliente para no llamar a la API con campos vacíos. ··· //
+    if (!email || !password) {
+      setErrorMessage("Debes completar tu correo y contraseña.");
+      setLoading(false);
+      return;
+    }
+
+    // ··· Autenticación con Supabase; el mensaje de error viene listo para mostrar. ··· //
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+      return;
+    }
+
+    // ··· Éxito: aquí podrías redirigir con el router tras confirmar la sesión. ··· //
+    setSuccessMessage("Sesión iniciada correctamente.");
+    setLoading(false);
+  };
+
   return (
     /* Contenedor de auth: título lateral, tarjeta con formulario y enlace a registro */
     <AuthShell
@@ -35,7 +80,7 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <form className="mt-8 space-y-5">
+      <form onSubmit={handleLogin} className="mt-8 space-y-5">
         {/* Campo correo: type email y estilos coherentes con el tema oscuro de la tarjeta. */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -48,8 +93,10 @@ export default function LoginPage() {
           </Label>
           <Input
             id="email"
+            name="email"
             type="email"
             placeholder="correo@ejemplo.com"
+            disabled={loading}
             className="h-12 rounded-xl border-white/15 bg-white/6 text-white placeholder:text-white/35"
           />
         </motion.div>
@@ -76,12 +123,29 @@ export default function LoginPage() {
 
           <PasswordInput
             id="password"
+            name="password"
             placeholder="••••••••"
+            disabled={loading}
             className="h-12 rounded-xl border-white/15 bg-white/6 text-white placeholder:text-white/35"
           />
         </motion.div>
 
-        {/* Acción principal: submit pendiente de handler (login real). */}
+        {/* Banner de feedback: error (rojo) o éxito (verde) según el último intento. */}
+        {(errorMessage || successMessage) && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`rounded-xl border px-4 py-3 text-sm ${
+              errorMessage
+                ? "border-red-400/20 bg-red-500/10 text-red-200"
+                : "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
+            }`}
+          >
+            {errorMessage || successMessage}
+          </motion.div>
+        )}
+
+        {/* Acción principal: submit conectado con login real. */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -90,9 +154,12 @@ export default function LoginPage() {
         >
           <Button
             type="submit"
-            className="group relative min-h-12 w-full overflow-hidden rounded-xl bg-[#FF5B04] text-base text-white transition-all duration-300 hover:scale-[1.01] hover:bg-[#e65000] hover:shadow-[0_0_22px_rgba(255,91,4,0.24)]"
+            disabled={loading}
+            className="group relative min-h-12 w-full overflow-hidden rounded-xl bg-[#FF5B04] text-base text-white transition-all duration-300 hover:scale-[1.01] hover:bg-[#e65000] hover:shadow-[0_0_22px_rgba(255,91,4,0.24)] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            <span className="relative z-10">Iniciar sesión</span>
+            <span className="relative z-10">
+              {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+            </span>
             <span className="absolute inset-0 z-0 bg-[linear-gradient(120deg,transparent_20%,rgba(255,255,255,0.22)_50%,transparent_80%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           </Button>
         </motion.div>
