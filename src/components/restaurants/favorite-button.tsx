@@ -11,7 +11,7 @@ import { Heart } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 
-import { supabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import {
   addFavorite,
   isRestaurantFavorite,
@@ -33,6 +33,7 @@ export function FavoriteButton({
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
     let isMounted = true;
@@ -40,20 +41,24 @@ export function FavoriteButton({
     // ··· Cargar sesión + estado del restaurante para pintar el icono correctamente. ··· //
     const loadFavoriteState = async () => {
       const {
-        data: { user },
+        data: { user: currentUser },
       } = await supabase.auth.getUser();
 
       if (!isMounted) return;
 
-      setUser(user);
+      setUser(currentUser);
 
-      if (!user) {
+      if (!currentUser) {
         setIsFavorite(false);
         setLoading(false);
         return;
       }
 
-      const favorite = await isRestaurantFavorite(user.id, restaurantId);
+      const favorite = await isRestaurantFavorite(
+        supabase,
+        currentUser.id,
+        restaurantId
+      );
 
       if (!isMounted) return;
 
@@ -76,7 +81,11 @@ export function FavoriteButton({
         return;
       }
 
-      const favorite = await isRestaurantFavorite(currentUser.id, restaurantId);
+      const favorite = await isRestaurantFavorite(
+        supabase,
+        currentUser.id,
+        restaurantId
+      );
 
       if (!isMounted) return;
 
@@ -101,14 +110,14 @@ export function FavoriteButton({
 
     // ··· Alterna insert/delete según estado actual del restaurante. ··· //
     if (isFavorite) {
-      const { error } = await removeFavorite(user.id, restaurantId);
+      const { error } = await removeFavorite(supabase, user.id, restaurantId);
 
       if (!error) {
         setIsFavorite(false);
         onToggle?.(false);
       }
     } else {
-      const { error } = await addFavorite(user.id, restaurantId);
+      const { error } = await addFavorite(supabase, user.id, restaurantId);
 
       if (!error) {
         setIsFavorite(true);

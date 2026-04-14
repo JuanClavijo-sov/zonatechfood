@@ -5,7 +5,9 @@
 // ··· Cliente Supabase compartido; lecturas sujetas a RLS en producción. ··· //
 // ··· getRestaurantBySlug usa maybeSingle() para 0 o 1 fila sin error por duplicados. ··· //
 
-import { supabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client";
+
+const supabase = createClient();
 
 /** Fila alineada con `public.restaurants` y campos usados en listados y ficha. */
 export type Restaurant = {

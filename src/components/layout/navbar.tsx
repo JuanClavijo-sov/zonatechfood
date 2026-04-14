@@ -12,7 +12,7 @@ import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 
-import { supabase } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/client"; // Supabase client para SSR
 import { Button } from "@/components/ui/button";
 
 // ··· Enlaces principales; la columna central solo se muestra desde breakpoint md. ··· //
@@ -30,6 +30,8 @@ export function Navbar() {
   const [user, setUser] = useState<User | null>(null);
   // ··· authLoading: evita parpadeo entre "invitado" y "logueado" en la primera pintura. ··· //
   const [authLoading, setAuthLoading] = useState(true);
+  // ··· Supabase client para CSR. ··· //
+  const supabase = createClient(); // Supabase client para CSR
 
   useEffect(() => {
     // ··· Umbrales distintos al subir y bajar para que el cambio no tiemble (histeresis). ··· //

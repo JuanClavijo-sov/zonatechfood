@@ -17,13 +17,16 @@ import { PasswordInput } from "@/components/forms/password-input";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/lib/supabase/client";
+// ··· Supabase client para CSR. ··· //
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
   // ··· Estados locales: bloqueo del formulario, error de Supabase y mensaje de éxito. ··· //
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  // ··· Supabase client para CSR. ··· //
+  const supabase = createClient(); // Supabase client para CSR
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
