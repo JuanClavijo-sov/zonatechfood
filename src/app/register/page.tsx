@@ -27,7 +27,7 @@ export default function RegisterPage() {
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // ··· Reiniciar avisos y marcar envio en curso. ··· //
+    // ··· Reiniciar avisos y marcar envío en curso. ··· //
     setErrorMessage("");
     setSuccessMessage("");
     setLoading(true);
@@ -47,7 +47,7 @@ export default function RegisterPage() {
       return;
     }
 
-    // ··· Evitar registros con contrasenas distintas antes de llamar a Supabase. ··· //
+    // ··· Evitar registros con contraseñas distintas antes de llamar a Supabase. ··· //
     if (password !== confirmPassword) {
       setErrorMessage("Las contraseñas no coinciden.");
       setLoading(false);
@@ -78,10 +78,12 @@ export default function RegisterPage() {
       return;
     }
 
-    // ··· Exito: limpiar campos y mostrar instrucciones (confirmacion por email si aplica). ··· //
+    // ··· Éxito: limpiar formulario y enviar al login con recarga para alinear sesión y navbar. ··· //
     setSuccessMessage("Cuenta creada correctamente. Ya puedes iniciar sesión.");
     form.reset();
     setLoading(false);
+
+    window.location.href = "/login";
   };
 
   return (
@@ -195,7 +197,7 @@ export default function RegisterPage() {
           </motion.div>
         )}
 
-        {/* Envío del alta: boton deshabilitado mientras Supabase procesa signUp. */}
+        {/* Envío del alta: botón deshabilitado mientras Supabase procesa signUp. */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -58,9 +58,11 @@ export default function LoginPage() {
       return;
     }
 
-    // ··· Éxito: aquí podrías redirigir con el router tras confirmar la sesión. ··· //
+    // ··· Éxito: mensaje breve y redirección completa al inicio para refrescar navbar y layout. ··· //
     setSuccessMessage("Sesión iniciada correctamente.");
     setLoading(false);
+
+    window.location.href = "/";
   };
 
   return (
