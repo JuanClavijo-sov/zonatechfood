@@ -27,10 +27,30 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// ··· Definimos los metadatos. ··· //
+// ··· Definimos los metadatos globales con template para títulos de sub-páginas. ··· //
 export const metadata: Metadata = {
-  title: "ZonaTechFood",
-  description: "Discover the best tech-inspired restaurants in one place.",
+  title: {
+    default: "ZonaTechFood — Descubre restaurantes con estilo",
+    template: "%s | ZonaTechFood",
+  },
+  description:
+    "Descubre restaurantes innovadores en Medellín. Guarda tus favoritos, explora categorías y vive una experiencia gastronómica moderna.",
+  keywords: [
+    "restaurantes",
+    "Medellín",
+    "gastronomía",
+    "favoritos",
+    "comida",
+    "ZonaTechFood",
+  ],
+  openGraph: {
+    title: "ZonaTechFood — Descubre restaurantes con estilo",
+    description:
+      "Explora restaurantes innovadores, guarda tus favoritos y descubre experiencias gastronómicas modernas en Medellín.",
+    type: "website",
+    locale: "es_CO",
+    siteName: "ZonaTechFood",
+  },
 };
 
 // ··· Componente de Layout ··· //
@@ -40,7 +60,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" data-scroll-behavior="smooth">
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen antialiased`}
       >

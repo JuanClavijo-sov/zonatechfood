@@ -2,64 +2,87 @@
 // ··· PAGE.TSX: Listado de restaurantes (ZonaTechFood) ··· //
 // ·················································· //
 
-// ··· Página cliente: carga todos los registros una vez y filtra en memoria con useMemo. ··· //
-// ··· Filtros en RestaurantFilters; resultados en RestaurantGrid o esqueletos mientras carga. ··· //
+// ··· Página cliente: carga todos los registros una vez y filtra/ordena en memoria. ··· //
+// ··· Incluye búsqueda, filtro de categoría, ordenación y paginación por página. ··· //
 
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "motion/react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { RestaurantFilters } from "@/components/restaurants/restaurant-filters";
+import { RestaurantFilters, type SortOption } from "@/components/restaurants/restaurant-filters";
 import { RestaurantGrid } from "@/components/restaurants/restaurant-grid";
 import { getAllRestaurants, type Restaurant } from "@/lib/supabase/restaurants";
 
+const PAGE_SIZE = 9;
+
 export default function RestaurantsPage() {
-  // ··· Dataset completo tras el fetch; los filtros no vuelven a llamar a Supabase. ··· //
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [onlyFeatured, setOnlyFeatured] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>("rating-desc");
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // ··· Montaje: traer filas y liberar el estado de carga para pintar grid o vacío. ··· //
     const loadRestaurants = async () => {
       setLoading(true);
       const data = await getAllRestaurants();
       setRestaurants(data);
       setLoading(false);
     };
-
     loadRestaurants();
   }, []);
 
-  // ··· Categorías únicas derivadas de los datos (alimentan el desplegable del filtro). ··· //
-  const categories = useMemo(() => {
-    return [...new Set(restaurants.map((restaurant) => restaurant.category))];
-  }, [restaurants]);
+  // ··· Reiniciar a página 1 cuando cambia cualquier filtro. ··· //
+  useEffect(() => {
+    setPage(1);
+  }, [search, selectedCategory, onlyFeatured, sortBy]);
 
-  // ··· Búsqueda por texto + categoría + toggle "solo destacados", todo en cliente. ··· //
-  const filteredRestaurants = useMemo(() => {
-    return restaurants.filter((restaurant) => {
-      const matchesSearch =
-        restaurant.name.toLowerCase().includes(search.toLowerCase()) ||
-        restaurant.description.toLowerCase().includes(search.toLowerCase()) ||
-        restaurant.location.toLowerCase().includes(search.toLowerCase());
+  // ··· Categorías únicas para el desplegable. ··· //
+  const categories = useMemo(
+    () => [...new Set(restaurants.map((r) => r.category))],
+    [restaurants]
+  );
 
-      const matchesCategory =
-        selectedCategory === "all" || restaurant.category === selectedCategory;
-
-      const matchesFeatured = !onlyFeatured || restaurant.is_featured;
-
-      return matchesSearch && matchesCategory && matchesFeatured;
+  // ··· Filtrado + ordenación en cliente. ··· //
+  const filteredAndSorted = useMemo(() => {
+    const filtered = restaurants.filter((r) => {
+      const q = search.toLowerCase();
+      const matchSearch =
+        r.name.toLowerCase().includes(q) ||
+        r.description.toLowerCase().includes(q) ||
+        r.location.toLowerCase().includes(q);
+      const matchCategory =
+        selectedCategory === "all" || r.category === selectedCategory;
+      const matchFeatured = !onlyFeatured || r.is_featured;
+      return matchSearch && matchCategory && matchFeatured;
     });
-  }, [restaurants, search, selectedCategory, onlyFeatured]);
+
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "rating-desc": return b.rating - a.rating;
+        case "rating-asc": return a.rating - b.rating;
+        case "name-asc": return a.name.localeCompare(b.name);
+        case "name-desc": return b.name.localeCompare(a.name);
+        default: return 0;
+      }
+    });
+  }, [restaurants, search, selectedCategory, onlyFeatured, sortBy]);
+
+  // ··· Paginación: slicear solo la página actual. ··· //
+  const totalPages = Math.max(1, Math.ceil(filteredAndSorted.length / PAGE_SIZE));
+  const paginated = filteredAndSorted.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
 
   return (
     <section className="px-4 pb-20 pt-8 md:pt-12">
       <div className="mx-auto max-w-7xl">
-        {/* Intro animada: título y descripción del listado */}
+        {/* Intro animada */}
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
@@ -79,29 +102,91 @@ export default function RestaurantsPage() {
         </motion.div>
 
         <div className="space-y-8">
-          {/* Controles de búsqueda, categoría y destacados (estado elevado en esta página) */}
           <RestaurantFilters
             search={search}
             selectedCategory={selectedCategory}
             onlyFeatured={onlyFeatured}
+            sortBy={sortBy}
             categories={categories}
             onSearchChange={setSearch}
             onCategoryChange={setSelectedCategory}
             onFeaturedChange={setOnlyFeatured}
+            onSortChange={setSortBy}
           />
 
           {loading ? (
-            /* Placeholders tipo tarjeta mientras Supabase responde */
             <div className="grid gap-6 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, index) => (
+              {Array.from({ length: 6 }).map((_, i) => (
                 <div
-                  key={index}
+                  key={i}
                   className="glass h-[420px] animate-pulse rounded-[28px] border-white/10"
                 />
               ))}
             </div>
           ) : (
-            <RestaurantGrid restaurants={filteredRestaurants} />
+            <>
+              {/* Contador de resultados */}
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-white/50">
+                  {filteredAndSorted.length === 0
+                    ? "Sin resultados"
+                    : `${filteredAndSorted.length} restaurante${filteredAndSorted.length !== 1 ? "s" : ""} encontrado${filteredAndSorted.length !== 1 ? "s" : ""}`}
+                </p>
+                {totalPages > 1 && (
+                  <p className="text-sm text-white/40">
+                    Página {page} de {totalPages}
+                  </p>
+                )}
+              </div>
+
+              <RestaurantGrid restaurants={paginated} />
+
+              {/* Controles de paginación */}
+              {totalPages > 1 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35 }}
+                  className="flex items-center justify-center gap-2"
+                >
+                  {/* Botón anterior */}
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    aria-label="Página anterior"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/12 bg-white/6 text-white/70 transition-all hover:bg-white/12 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    <ChevronLeft className="size-4" />
+                  </button>
+
+                  {/* Números de página */}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      aria-label={`Página ${p}`}
+                      aria-current={p === page ? "page" : undefined}
+                      className={`h-10 w-10 rounded-xl text-sm font-medium transition-all ${p === page
+                          ? "bg-[#FF5B04] text-white shadow-[0_0_16px_rgba(255,91,4,0.3)]"
+                          : "border border-white/12 bg-white/6 text-white/60 hover:bg-white/12 hover:text-white"
+                        }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+
+                  {/* Botón siguiente */}
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    aria-label="Página siguiente"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/12 bg-white/6 text-white/70 transition-all hover:bg-white/12 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    <ChevronRight className="size-4" />
+                  </button>
+                </motion.div>
+              )}
+            </>
           )}
         </div>
       </div>

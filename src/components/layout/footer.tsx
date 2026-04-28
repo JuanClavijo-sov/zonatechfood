@@ -19,6 +19,7 @@ const footerLinks = {
     cuenta: [
         { href: "/login", label: "Iniciar sesión" },
         { href: "/register", label: "Registrarse" },
+        { href: "/profile", label: "Mi perfil" },
     ],
 };
 

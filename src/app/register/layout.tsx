@@ -4,8 +4,16 @@
 
 // ··· Si hay sesión activa, redirige al inicio para no repetir alta autenticada. ··· //
 
+import type { Metadata } from "next";
+
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "Registrarse",
+  description:
+    "Crea tu cuenta en ZonaTechFood para guardar restaurantes favoritos y personalizar tu experiencia gastronómica.",
+};
 
 export default async function RegisterLayout({
   children,

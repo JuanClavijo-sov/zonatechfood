@@ -11,7 +11,7 @@ import { FeaturedRestaurants } from "@/components/home/featured-restaurants";
 import { Hero } from "@/components/home/hero";
 import { HomeCta } from "@/components/home/home-cta";
 import { HowItWorks } from "@/components/home/how-it-works";
-import { getFeaturedRestaurants } from "@/lib/supabase/restaurants";
+import { getFeaturedRestaurants } from "@/lib/supabase/restaurants.server";
 
 export default async function HomePage() {
   // ··· Límite fijo de tarjetas en home; la lista completa vive en /restaurants. ··· //

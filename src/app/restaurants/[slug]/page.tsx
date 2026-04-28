@@ -5,11 +5,13 @@
 // ··· Server Component: lee el slug de la URL y carga la fila con Supabase. ··· //
 // ··· Sin resultado: pantalla explicativa con enlaces; con datos: layout hero + información. ··· //
 
+import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, Star } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { getRestaurantBySlug } from "@/lib/supabase/restaurants";
+import { getRestaurantBySlug } from "@/lib/supabase/restaurants.server";
 // ··· Botón reutilizable para guardar o quitar favoritos desde la ficha. ··· //
 import { FavoriteButton } from "@/components/restaurants/favorite-button";
 
@@ -19,6 +21,31 @@ type RestaurantDetailPageProps = {
     slug: string;
   }>;
 };
+
+// ··· Metadata dinámica: título y descripción basados en el restaurante real. ··· //
+export async function generateMetadata({
+  params,
+}: RestaurantDetailPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const restaurant = await getRestaurantBySlug(slug);
+
+  if (!restaurant) {
+    return {
+      title: "Restaurante no encontrado",
+      description: "El restaurante que buscas no existe o ha sido eliminado.",
+    };
+  }
+
+  return {
+    title: restaurant.name,
+    description: restaurant.description,
+    openGraph: {
+      title: `${restaurant.name} — ZonaTechFood`,
+      description: restaurant.description,
+      images: restaurant.image_url ? [restaurant.image_url] : undefined,
+    },
+  };
+}
 
 export default async function RestaurantDetailPage({
   params,
@@ -94,11 +121,14 @@ export default async function RestaurantDetailPage({
         {/* Dos columnas en desktop: imagen grande + panel de datos y acciones */}
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch">
           <div className="h-full">
-            <div className="glass h-full overflow-hidden rounded-[32px] border-white/10 p-2">
-              <img
+            <div className="glass relative h-full min-h-[320px] overflow-hidden rounded-[32px] border-white/10 p-2">
+              <Image
                 src={restaurant.image_url}
                 alt={restaurant.name}
-                className="h-full w-full rounded-[24px] object-cover"
+                fill
+                unoptimized
+                sizes="(max-width: 1024px) 100vw, 55vw"
+                className="rounded-[24px] object-cover"
               />
             </div>
           </div>

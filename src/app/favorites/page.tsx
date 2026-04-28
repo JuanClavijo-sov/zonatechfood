@@ -5,7 +5,15 @@
 // ··· Server Component: valida sesión y trae favoritos del usuario autenticado. ··· //
 // ··· Renderiza estado invitado o delega la interacción dinámica a FavoritesClient. ··· //
 
+import type { Metadata } from "next";
+
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Favoritos",
+  description:
+    "Gestiona tus restaurantes favoritos en ZonaTechFood. Accede a tu lista personalizada y organiza tus próximas salidas.",
+};
 import { Heart } from "lucide-react";
 
 import { FavoritesClient } from "@/components/favorites/favorites-client";

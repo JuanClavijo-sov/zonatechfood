@@ -8,6 +8,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "motion/react";
 import { MapPin, Star } from "lucide-react";
 
@@ -71,11 +72,14 @@ export function FeaturedRestaurants({
               <Card className="glass group overflow-hidden rounded-[28px] border-white/10 bg-white/8 p-0 transition-all duration-300 hover:shadow-[0_0_30px_rgba(30,70,107,0.25)]">
                 <CardContent className="p-0">
                   {/* Bloque hero de la tarjeta: imagen, degradado, categoría y valoración */}
-                  <div className="relative overflow-hidden">
-                    <img
+                  <div className="relative h-[230px] overflow-hidden">
+                    <Image
                       src={restaurant.image_url}
                       alt={restaurant.name}
-                      className="h-[230px] w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      fill
+                      unoptimized
+                      sizes="(max-width: 1024px) 100vw, 33vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-110"
                     />
 
                     <div className="absolute inset-0 bg-gradient-to-t from-[#08172f]/80 via-transparent to-transparent" />

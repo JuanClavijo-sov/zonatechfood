@@ -1,13 +1,10 @@
 // ·················································· //
-// ··· RESTAURANTS.TS: Consultas a la tabla restaurants ··· //
+// ··· RESTAURANTS.TS: Consultas al cliente de navegador ··· //
 // ·················································· //
 
-// ··· Cliente Supabase compartido; lecturas sujetas a RLS en producción. ··· //
-// ··· getRestaurantBySlug usa maybeSingle() para 0 o 1 fila sin error por duplicados. ··· //
+// ··· Usado desde Client Components (restaurants/page.tsx, etc.) ··· //
 
 import { createClient } from "@/lib/supabase/client";
-
-const supabase = createClient();
 
 /** Fila alineada con `public.restaurants` y campos usados en listados y ficha. */
 export type Restaurant = {
@@ -22,25 +19,10 @@ export type Restaurant = {
   is_featured: boolean;
 };
 
-/** Destacados con límite; pensado para la home (Server Component). */
-export async function getFeaturedRestaurants(limit = 3): Promise<Restaurant[]> {
-  const { data, error } = await supabase
-    .from("restaurants")
-    .select("*")
-    .eq("is_featured", true)
-    .order("rating", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    console.error("Error fetching featured restaurants:", error.message);
-    return [];
-  }
-
-  return (data ?? []) as Restaurant[];
-}
-
-/** Lista completa ordenada por valoración; ante error devuelve array vacío. */
+/** Lista completa ordenada por valoración; para Client Components. */
 export async function getAllRestaurants(): Promise<Restaurant[]> {
+  const supabase = createClient();
+
   const { data, error } = await supabase
     .from("restaurants")
     .select("*")
@@ -52,22 +34,4 @@ export async function getAllRestaurants(): Promise<Restaurant[]> {
   }
 
   return (data ?? []) as Restaurant[];
-}
-
-/** Una fila por slug o null; errores de red/consulta devuelven null (no lanza). */
-export async function getRestaurantBySlug(
-  slug: string
-): Promise<Restaurant | null> {
-  const { data, error } = await supabase
-    .from("restaurants")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
-
-  if (error) {
-    console.error("Error fetching restaurant by slug:", error.message);
-    return null;
-  }
-
-  return (data as Restaurant | null) ?? null;
 }

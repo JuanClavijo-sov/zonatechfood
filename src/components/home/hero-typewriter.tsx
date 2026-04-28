@@ -48,8 +48,10 @@ export function HeroTypewriter() {
         setDisplayedText(currentPhrase.slice(0, displayedText.length - 1));
       }, DELETING_SPEED);
     } else if (isDeleting && displayedText.length === 0) {
-      setIsDeleting(false);
-      setPhraseIndex((current) => (current + 1) % phrases.length);
+      timeout = setTimeout(() => {
+        setIsDeleting(false);
+        setPhraseIndex((current) => (current + 1) % phrases.length);
+      }, TYPING_SPEED);
     }
 
     return () => clearTimeout(timeout);

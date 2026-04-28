@@ -8,7 +8,7 @@
 "use client";
 
 import { Heart } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 
 import { createClient } from "@/lib/supabase/client";
@@ -33,7 +33,7 @@ export function FavoriteButton({
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     let isMounted = true;
@@ -97,7 +97,7 @@ export function FavoriteButton({
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [restaurantId]);
+  }, [restaurantId, supabase]);
 
   const handleToggleFavorite = async () => {
     // ··· Sin sesión: mandar al flujo de acceso antes de mutar favoritos. ··· //
