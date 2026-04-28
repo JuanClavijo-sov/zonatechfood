@@ -1,14 +1,15 @@
 // ·················································· //
-// ··· MIDDLEWARE.TS: Guardia centralizado de rutas ··· //
+// ··· PROXY.TS: Guardia centralizado de rutas ··· //
 // ·················································· //
 
+// ··· Sustituye a middleware.ts (deprecado en Next.js 16). ··· //
 // ··· Protege /profile y /favorites: redirige a /login si no hay sesión. ··· //
 // ··· Protege /login y /register: redirige a / si ya hay sesión activa. ··· //
 // ··· Refresca el token de Supabase en cada request para mantener la sesión viva. ··· //
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createMiddlewareClient } from "@/lib/supabase/middleware";
+import { createServerClient } from "@supabase/ssr";
 
 // ··· Rutas que requieren sesión activa. ··· //
 const PROTECTED = ["/profile", "/favorites"];
@@ -16,9 +17,29 @@ const PROTECTED = ["/profile", "/favorites"];
 // ··· Rutas que solo se muestran a usuarios NO autenticados. ··· //
 const AUTH_ONLY = ["/login", "/register"];
 
-export async function middleware(request: NextRequest) {
-    const response = NextResponse.next();
-    const supabase = createMiddlewareClient(request, response);
+export async function proxy(request: NextRequest) {
+    let response = NextResponse.next({ request });
+
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return request.cookies.getAll();
+                },
+                setAll(cookiesToSet) {
+                    cookiesToSet.forEach(({ name, value }) =>
+                        request.cookies.set(name, value)
+                    );
+                    response = NextResponse.next({ request });
+                    cookiesToSet.forEach(({ name, value, options }) =>
+                        response.cookies.set(name, value, options)
+                    );
+                },
+            },
+        }
+    );
 
     // ··· Refrescar la sesión (renueva el access token si está caducado). ··· //
     const {
