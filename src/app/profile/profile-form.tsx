@@ -43,9 +43,13 @@ export function ProfileForm({
 }: ProfileFormProps) {
     // ··· Sección 1: información personal (nombre y teléfono). ··· //
     const [fullName, setFullName] = useState(initialName);
-    const [phone, setPhone] = useState(
-        initialPhone ? formatColombianPhone(initialPhone) : ""
-    );
+    const [phone, setPhone] = useState(() => {
+        if (!initialPhone) return "";
+        // ··· El número se guarda como +57XXXXXXXXXX; quitar el prefijo antes de formatear. ··· //
+        const digits = initialPhone.replace(/\D/g, "");
+        const localDigits = digits.startsWith("57") ? digits.slice(2) : digits;
+        return formatColombianPhone(localDigits);
+    });
     const [infoLoading, setInfoLoading] = useState(false);
     const [infoError, setInfoError] = useState("");
     const [infoSuccess, setInfoSuccess] = useState("");
@@ -269,8 +273,8 @@ export function ProfileForm({
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className={`rounded-xl border px-4 py-3 text-sm ${infoError
-                                        ? "border-red-400/20 bg-red-500/10 text-red-200"
-                                        : "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
+                                    ? "border-red-400/20 bg-red-500/10 text-red-200"
+                                    : "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
                                     }`}
                             >
                                 {infoError || infoSuccess}
@@ -345,16 +349,16 @@ export function ProfileForm({
                                 placeholder="nuevo@correo.com"
                                 disabled={emailLoading}
                                 className={`h-12 rounded-xl border-white/15 bg-white/6 text-white placeholder:text-white/35 ${confirmEmail && confirmEmail !== newEmail
-                                        ? "border-red-400/40 focus:ring-red-400"
-                                        : ""
+                                    ? "border-red-400/40 focus:ring-red-400"
+                                    : ""
                                     }`}
                             />
                             {/* Indicador en tiempo real de coincidencia */}
                             {confirmEmail && (
                                 <p
                                     className={`text-xs ${confirmEmail === newEmail
-                                            ? "text-emerald-400"
-                                            : "text-red-400"
+                                        ? "text-emerald-400"
+                                        : "text-red-400"
                                         }`}
                                 >
                                     {confirmEmail === newEmail
@@ -371,8 +375,8 @@ export function ProfileForm({
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className={`mt-5 rounded-xl border px-4 py-3 text-sm ${emailError
-                                    ? "border-red-400/20 bg-red-500/10 text-red-200"
-                                    : "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
+                                ? "border-red-400/20 bg-red-500/10 text-red-200"
+                                : "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
                                 }`}
                         >
                             {emailError || emailSuccess}
